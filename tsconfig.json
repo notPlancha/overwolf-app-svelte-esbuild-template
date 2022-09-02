@@ -1,0 +1,13 @@
+{
+  "extends": "@tsconfig/svelte/tsconfig.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "types": [
+      "@overwolf/types"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ],
+
+}

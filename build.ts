@@ -3,7 +3,7 @@ import sveltePlugin from "esbuild-svelte"
 import sveltePreprocess from "svelte-preprocess";
 import fs from "fs";
 import {manifest} from "./Manifest";
-import {htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
+import {type HtmlFileConfiguration, htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'
 import {zip} from "zip-a-folder";
 //TODO build the sveltes
@@ -24,78 +24,89 @@ function pack(folderPath: string, resultPath: string){
         if (err) console.error(err)
     })
 }
-const pages: overwolf.Dictionary<overwolf.extensions.ExtensionWindowData> = manifest.data.windows
+function fileToHtml(fileName: string){
+    const fileNames = fileName.split(".")
+    fileNames.pop()
+    return fileNames.join(".") + ".html"
+}
 
+
+const pages: overwolf.Dictionary<overwolf.extensions.ExtensionWindowData> = manifest.data.windows
+let entryPoints = new Array<{ windowName: string, entryFile: string }>(0);
 for (const [windowName, windowData] of Object.entries(pages)) {
-    if (windowData.file.endsWith(".html")){
-        const results = await build({
-            define: {"DEBUG": DEBUG? "true" : "false"},
-            entryPoints: [ENTRY.concat(windowName, windowData.file)],
-            outdir: OUTDIR,
-            minify: MINIFY,
-            assetNames: '[name]', //https://www.npmjs.com/package/@esbuilder/html TODO check if this comes right
-            plugins:[fromHtmlPlugin({
-                entryNames: "js/[name]" //TODO check if this does what I want
-            })]
-        })
-    }
-    else if (windowData.file.endsWith(".svelte")){
-        const toHtml = windowData.file.substring(0, windowData.file.length - 7) + ".html"
-        const results = await build({
+    if (windowData.file.endsWith(".svelte")){
+        await build({
             define: { "DEBUG": DEBUG? "true" : "false", "APP":windowName, "APPNAME":windowData.file },
             entryPoints: ["index.svelte.ts"],
-            bundle: true,
-            outdir: OUTDIR + "js",
-            minify: MINIFY,
-            mainFields: ["svelte", "browser", "module", "main"],
-            metafile: true,
-            plugins: [
-                sveltePlugin({
-                    preprocess: sveltePreprocess()
-                }),
-                exportHtmlPlugin({
-                    files:[
-                        {
-                            title: manifest.meta.name + ":" + windowName,
-                            scriptLoading: "defer",
-                            filename: "..\\" + toHtml, //TODO check if this works
-                            entryPoints: ["index.svelte.ts"] //TODO check if this outputs as ts
-                        }
-                    ]
-                }),
-            ]
+            bundle: false,
+            outdir: "temp/",
+            entryNames: windowName,
         })
-        windowData.file =toHtml //TODO check if properly changes
-    }
-    else{
-        //treate it as a script, which will need a template html
-        //So basically the svelte one without the svelte plugins and with this as an entry point
-        //TODO
-        const fileName = windowData.file.split(".")
-        fileName.pop()
-        const toHtml = fileName.join(".") + ".html"
-        const results = await build({
-            define: {"DEBUG": DEBUG? "true" : "false"},
-            entryPoints: [ENTRY+windowData.file],
-            bundle: true,
-            outdir: OUTDIR + "js",
-            minify: MINIFY,
-            plugins: [
-                exportHtmlPlugin({
-                    files: [
-                        {
-                            title: manifest.meta.name + ":" + windowName,
-                            scriptLoading: "defer",
-                            filename: "../" + toHtml, //TODO check if this works
-                            entryPoints: [ENTRY+ windowData.file],
-                            //TODO check if the default template is enough for overwolf
-                        }
-                    ]
-                })
-            ]
-        })
+        entryPoints.push({windowName: windowName, entryFile: windowName + ".js"}) //TODO check if this is right
+        windowData.file = fileToHtml(windowData.file);
+    }else if (windowData.file.endsWith(".html")){
+        entryPoints.push({windowName: windowName, entryFile: windowData.file});
+    }else{
+        entryPoints.push({windowName: windowName, entryFile: windowData.file});
+        windowData.file = fileToHtml(windowData.file);
     }
 }
+const notHtmlEntryPoints = entryPoints.filter(value => {
+    return !value.entryFile.endsWith(".html");
+})
+
+const results = await build({
+    define: {"DEBUG": DEBUG? "true" : "false"},
+    entryPoints: entryPoints.map(e => e.entryFile),
+    outdir: OUTDIR,
+    minify: MINIFY,
+    entryNames: "[ext]/[name]",
+    bundle: true,
+    mainFields: ["svelte", "browser", "module", "main"],
+    metafile: true,
+    assetNames: '[name]', //https://www.npmjs.com/package/@esbuilder/html TODO check if this comes right
+    plugins: [
+        fromHtmlPlugin({
+            entryNames: "js/[name]"  //TODO check if this does what I want
+        }),
+        sveltePlugin({
+            preprocess: sveltePreprocess()
+        }),
+        exportHtmlPlugin({
+            files:notHtmlEntryPoints.map((value):HtmlFileConfiguration => {
+                return {
+                    entryPoints: [value.entryFile],
+                    title: manifest.meta.name + ":" + value.windowName,
+                    define: {"DEBUG": DEBUG? "true" : "false"},
+                    scriptLoading: "defer",
+                    filename: "..\\" + value.windowName, //TODO check if this works
+                    htmlTemplate: `
+                        <!DOCTYPE html>
+                        <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <div id="app"></div>
+                            </body>
+                        </html>
+                    `
+                }
+            })
+        })
+    ]
+})
+if (results.errors) {
+    console.log("Maybe some errors?")//TODO change
+    results.errors.forEach((v, i) => {
+        console.log("error " + i + " from " + v.pluginName)
+        console.log(v.text)
+    })
+}
+
+//else{ TODO have the errors only if its error but I don't know if the if is right or not
 //it's better to do this after because we don't want to export and zip multiple times in the loops
-toJson(manifest, OUTDIR + "manifest.json")
-pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk"))
+    toJson(manifest, OUTDIR + "manifest.json")
+    pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk"))
+//TODO check if the public has to be transfered too
+//}

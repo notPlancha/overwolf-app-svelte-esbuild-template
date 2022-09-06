@@ -6,7 +6,6 @@ import {manifest} from "./Manifest";
 import {type HtmlFileConfiguration, htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'
 import {zip} from "zip-a-folder";
-//TODO build the sveltes
 
 const
     DEBUG : boolean = true,
@@ -36,18 +35,18 @@ let entryPoints = new Array<{ windowName: string, entryFile: string }>(0);
 for (const [windowName, windowData] of Object.entries(pages)) {
     if (windowData.file.endsWith(".svelte")){
         await build({
-            define: { "DEBUG": DEBUG? "true" : "false", "APP":windowName, "APPNAME":windowData.file },
+            define: { "DEBUG": DEBUG? "true" : "false", "APP":windowName, "APPNAME":ENTRY + windowData.file },
             entryPoints: ["index.svelte.ts"],
             bundle: false,
             outdir: "temp/",
             entryNames: windowName,
         })
-        entryPoints.push({windowName: windowName, entryFile: windowName + ".js"}) //TODO check if this is right
+        entryPoints.push({windowName: windowName, entryFile: "temp/" + windowName + ".js"}) //TODO check if this is right
         windowData.file = fileToHtml(windowData.file);
     }else if (windowData.file.endsWith(".html")){
-        entryPoints.push({windowName: windowName, entryFile: windowData.file});
+        entryPoints.push({windowName: windowName, entryFile: ENTRY + windowData.file});
     }else{
-        entryPoints.push({windowName: windowName, entryFile: windowData.file});
+        entryPoints.push({windowName: windowName, entryFile: ENTRY + windowData.file});
         windowData.file = fileToHtml(windowData.file);
     }
 }
@@ -97,7 +96,7 @@ const results = await build({
     ]
 })
 if (results.errors) {
-    console.log("Maybe some errors?")//TODO change
+    console.log("Maybe some errors?")//TODO change later
     results.errors.forEach((v, i) => {
         console.log("error " + i + " from " + v.pluginName)
         console.log(v.text)

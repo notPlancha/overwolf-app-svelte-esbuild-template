@@ -2,8 +2,9 @@
     import Header from "./assets/Header.svelte";
     import {OWWindow} from "@overwolf/overwolf-api-ts/dist";
     import Counter from "./assets/Counter.svelte";
-
-    let desktopWindow : OWWindow = new OWWindow("desktop")
+    import { AppController } from "./background";
+    const appController = AppController.getInstance()
+    let desktopWindow : OWWindow = appController.desktopWindow;
 </script>
 
 <style lang="scss">

@@ -1,38 +1,52 @@
 //TODO finish + do TODOs
-import {OWGameListener, OWWindow} from "@overwolf/overwolf-api-ts/dist";
+import {OWGameListener, OWGames, OWWindow} from "@overwolf/overwolf-api-ts/dist";
+import {manifest} from "../Manifest";
+import desktop = overwolf.io.paths.desktop;
 type RunningGameInfo = overwolf.games.RunningGameInfo;
 
-type OnGameStateChangeDel = {
-    GameStateChange: "start" | "end",
-    del:{(info: RunningGameInfo):any}
-};
-type Id = number;
-type GameStateChange = "start" | "end";
-class BackgroundController {
-    private static _instance: BackgroundController = null;
-    private windows: Record<string, OWWindow>;
-    private _currIdNum: Id = 0;
-    private onGameStageChangeFuns: Record<number,OnGameStateChangeDel> = new Array(0)
-    public RegisterOnGameState(del: OnGameStateChangeDel): Id{
-        //TODO add to the records with a new id and return the id
+export class AppController {
+    private static _instance: AppController = null;
+    public static getInstance() : AppController{
+        if (AppController._instance === null) AppController._instance = new AppController();
+        return AppController._instance;
     }
-    public UnregisterOnGameStateChange(id: Id): boolean{
-        //True if it found delegate of that id
-        //TODO remove id from record
-    }
-    public static getInstance() : BackgroundController{
-        if (BackgroundController._instance === null) BackgroundController._instance = new BackgroundController();
-        return BackgroundController._instance;
-    }
-    private _gameListener: OWGameListener
+    //TODO associate the windows somehow chekck how to do
+    public desktopWindow: OWWindow = new OWWindow("desktop");
+    public inGameWindow: OWWindow = new OWWindow("in-game");
+    private gameListener: OWGameListener
     private constructor() {
-        this._gameListener = new OWGameListener({
+        this.gameListener = new OWGameListener({
             onGameStarted(info: RunningGameInfo): any {
-                //TODO make a foreach on the delegates
+                //TODO check if it's needed to check if it's a supported game
+                const cont = AppController.getInstance()
+                cont.desktopWindow.close();
+                cont.inGameWindow.restore();
             },
             onGameEnded(info: RunningGameInfo): any {
-                //TODO make a foreach on the delegates
+                const cont = AppController.getInstance()
+                cont.desktopWindow.restore() //TODO do communication
+                cont.inGameWindow.close()
             }
         })
+        overwolf.extensions.onAppLaunchTriggered.addListener(e => {
+            //This means that the app was lanuched by the game starting
+            //We want this template to be on launch app on click
+            if (!e || e.origin.includes("gamelaunchevent")) return;
+            OWGames.getRunningGameInfo().then(gameRunning => {
+                //this way in game the desktop will never open, leave if intentional
+                if (gameRunning.isRunning && gameRunning.id in manifest.data.game_targeting.game_ids){
+                    //in-game launch
+                    this.inGameWindow.restore();
+                    this.desktopWindow.close();
+                } else {
+                    //normal lanuch
+                    this.inGameWindow.close();
+                    this.desktopWindow.restore();
+                }
+            })
+
+        })
     }
+
+
 }

@@ -8,7 +8,7 @@
     ]
   },
   "files": [
-    "build.ts"
+    "build.mts"
   ],
   "exclude": [
     "node_modules"

@@ -1,6 +1,6 @@
 //TODO finish + do TODOs
 import {OWGameListener, OWGames, OWWindow} from "@overwolf/overwolf-api-ts/dist";
-import {manifest} from "../Manifest";
+import {manifest} from "../Manifest.mjs";
 import desktop = overwolf.io.paths.desktop;
 type RunningGameInfo = overwolf.games.RunningGameInfo;
 

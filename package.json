@@ -2,9 +2,10 @@
   "name": "overwolf-dbd-perk-tracker",
   "version": "0.1.0",
   "description": "Track survivor and killer perks",
+  "type": "module",
   "scripts": {
     "prebuild": "tsc --skipLibCheck --outdir temp --project tsconfig.json",
-    "build": "node temp/build.js",
+    "build": "node temp/build.mjs",
     "check": "svelte-check"
   },
   "author": "notPlancha",

@@ -2,7 +2,7 @@ import {build} from "esbuild";
 import sveltePlugin from "esbuild-svelte"
 import sveltePreprocess from "svelte-preprocess";
 import * as fs from "fs";
-import {manifest} from "./Manifest";
+import {manifest} from "./Manifest.mjs";
 import {type HtmlFileConfiguration, htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'
 import {zip} from "zip-a-folder";

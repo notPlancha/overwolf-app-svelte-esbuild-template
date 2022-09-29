@@ -26,7 +26,7 @@ export const manifest: overwolf.extensions.Manifest = {
         },
         windows: {
             "background": {
-                file: "background.ts",
+                file: "background.mts",
                 background_optimization: false,
                 is_background_page: true,
                 debug_url: "localhost:11101",

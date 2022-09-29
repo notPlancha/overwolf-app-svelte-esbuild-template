@@ -2,7 +2,7 @@
     import Header from "./assets/Header.svelte";
     import {OWWindow} from "@overwolf/overwolf-api-ts/dist";
     import Counter from "./assets/Counter.svelte";
-    import { AppController } from "./background";
+    import { AppController } from "./background.mjs";
     const appController = AppController.getInstance()
     let desktopWindow : OWWindow = appController.desktopWindow;
     //TODO add event logger for template

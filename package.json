@@ -3,17 +3,17 @@
   "version": "0.1.0",
   "description": "Track survivor and killer perks",
   "scripts": {
-    "prebuild": "tsc build.ts --skipLibCheck --outdir temp",
+    "prebuild": "tsc --skipLibCheck --outdir temp --project tsconfig.json",
     "build": "node temp/build.js",
     "check": "svelte-check"
   },
   "author": "notPlancha",
   "license": "MIT",
   "dependencies": {
-    "svelte": "^3.49.0",
-    "typescript": "^4.8.2",
+    "svelte": "^3.50.1",
+    "typescript": "^4.8.3",
     "@overwolf/overwolf-api-ts": "^1.3.0",
-    "@overwolf/types": "^3.21.3"
+    "@overwolf/types": "^3.21.4"
   },
   "devDependencies": {
     "esbuild-svelte": "^0.7.1",

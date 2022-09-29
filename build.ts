@@ -1,7 +1,7 @@
 import {build} from "esbuild";
 import sveltePlugin from "esbuild-svelte"
 import sveltePreprocess from "svelte-preprocess";
-import fs from "fs";
+import * as fs from "fs";
 import {manifest} from "./Manifest";
 import {type HtmlFileConfiguration, htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'

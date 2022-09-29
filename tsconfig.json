@@ -1,13 +1,17 @@
 {
   "extends": "@tsconfig/svelte/tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
+    "module": "esnext",
+    "target": "es2017",
     "types": [
       "@overwolf/types"
     ]
   },
+  "files": [
+    "build.ts"
+  ],
   "exclude": [
     "node_modules"
-  ],
+  ]
 
 }

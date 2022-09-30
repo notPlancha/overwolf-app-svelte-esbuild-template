@@ -29,18 +29,26 @@ function fileToHtml(fileName: string){
     return fileNames.join(".") + ".html"
 }
 
+function replaceAll(str: string, find: string, replaceStr: string) {
+    return str.replace(new RegExp(find, 'g'), replaceStr);
+}
+
+async function replaceToFile(fileSource, fileDestiny, defineObj: {[key: string]: string}) {
+    let fileContent = fs.readFileSync(fileSource, "utf8", )
+    for (let el in defineObj) {
+        fileContent = replaceAll(fileContent, el, defineObj[el])
+    }
+    fs.writeFileSync(fileDestiny, fileContent)
+}
+
 
 const pages: overwolf.Dictionary<overwolf.extensions.ExtensionWindowData> = manifest.data.windows
 let entryPoints = new Array<{ windowName: string, entryFile: string }>(0);
 for (const [windowName, windowData] of Object.entries(pages)) {
     if (windowData.file.endsWith(".svelte")){
-        await build({
-            define: { "DEBUG": DEBUG? "true" : "false", "APP":windowName, "APPNAME":ENTRY + windowData.file },
-            entryPoints: ["index.svelte.ts"],
-            bundle: false,
-            outdir: "temp/",
-            entryNames: windowName,
-        })
+        let subs = {"APPNAME" :ENTRY + windowData.file, "APP":windowName}
+        let indexFile = "temp/index." + windowData.file + ".ts"
+        await replaceToFile("index.svelte.ts", indexFile, subs)
         entryPoints.push({windowName: windowName, entryFile: "temp/" + windowName + ".js"}) //TODO check if this is right
         windowData.file = fileToHtml(windowData.file);
     }else if (windowData.file.endsWith(".html")){
@@ -95,17 +103,16 @@ const results = await build({
         })
     ]
 })
-if (results.errors) {
-    console.log("Maybe some errors?")//TODO change later
+if (results.errors.length > 0) {
     results.errors.forEach((v, i) => {
         console.log("error " + i + " from " + v.pluginName)
         console.log(v.text)
     })
 }
 
-//else{ TODO have the errors only if its error but I don't know if the if is right or not
+else{
 //it's better to do this after because we don't want to export and zip multiple times in the loops
     toJson(manifest, OUTDIR + "manifest.json")
-    pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk"))
+    pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk")) //TODO get error
 //TODO check if the public has to be transfered too
-//}
+}

@@ -36,7 +36,7 @@ export const manifest: overwolf.extensions.Manifest = {
                 disable_hardware_acceleration: false
             },
             "in_game": {
-                file: "In_Game.svelte",
+                file: "In_game.svelte",
                 transparent: false,
                 debug_url: "localhost:11102",
                 show_in_taskbar: false,

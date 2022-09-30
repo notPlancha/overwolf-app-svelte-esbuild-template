@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import Header from "./assets/Header.svelte";
     import {OWWindow} from "@overwolf/overwolf-api-ts/dist";
     import Counter from "./assets/Counter.svelte";

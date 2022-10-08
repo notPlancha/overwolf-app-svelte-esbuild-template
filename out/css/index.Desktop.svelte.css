@@ -1,0 +1,35 @@
+/* fakecss:C:/Users/Plancha/Desktop/overwolf app dbd/overwolf-dbd-perk-tracker-esbuild/src/assets/Header.esbuild-svelte-fake-css */
+header.svelte-1dx64x8.svelte-1dx64x8 {
+  display: flex;
+  align-items: center;
+  z-index: 9999;
+  background-color: #272727;
+}
+img.svelte-1dx64x8.svelte-1dx64x8 {
+  padding-left: 10px;
+  margin: 0;
+}
+h1.svelte-1dx64x8.svelte-1dx64x8 {
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  padding-left: 8px;
+  color: #8d8d8d;
+  margin: 0;
+  cursor: inherit;
+}
+button.svelte-1dx64x8.svelte-1dx64x8 {
+  background-color: transparent;
+  transition-duration: 0.15s;
+  transition-property: background-color;
+  transition-timing-function: ease-in-out;
+}
+button.svelte-1dx64x8 .svelte-1dx64x8:hover {
+  background-color: #464646;
+}
+
+/* fakecss:C:/Users/Plancha/Desktop/overwolf app dbd/overwolf-dbd-perk-tracker-esbuild/src/Desktop.esbuild-svelte-fake-css */
+main.svelte-1m2kz86 {
+  padding: 12px;
+  text-align: center;
+}

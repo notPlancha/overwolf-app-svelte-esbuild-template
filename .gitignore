@@ -27,3 +27,5 @@ pids
 # TypeScript cache
 *.tsbuildinfo
 .idea/
+meta.json
+*/meta.json

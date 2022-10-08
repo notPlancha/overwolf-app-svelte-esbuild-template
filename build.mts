@@ -49,7 +49,7 @@ for (const [windowName, windowData] of Object.entries(pages)) {
         let subs = {"APPNAME" :ENTRY + windowData.file, "APP":windowName}
         let indexFile = "temp/index." + windowData.file + ".ts"
         await replaceToFile("index.svelte.ts", indexFile, subs)
-        entryPoints.push({windowName: windowName, entryFile: "temp/" + windowName + ".js"}) //TODO check if this is right
+        entryPoints.push({windowName: windowName, entryFile: indexFile}) //TODO check if this is right
         windowData.file = fileToHtml(windowData.file);
     }else if (windowData.file.endsWith(".html")){
         entryPoints.push({windowName: windowName, entryFile: ENTRY + windowData.file});
@@ -70,7 +70,7 @@ const results = await build({
     entryNames: "[ext]/[name]",
     bundle: true,
     mainFields: ["svelte", "browser", "module", "main"],
-    metafile: true,
+    metafile: DEBUG,
     assetNames: '[name]', //https://www.npmjs.com/package/@esbuilder/html TODO check if this comes right
     plugins: [
         fromHtmlPlugin({
@@ -86,7 +86,7 @@ const results = await build({
                     title: manifest.meta.name + ":" + value.windowName,
                     define: {"DEBUG": DEBUG? "true" : "false"},
                     scriptLoading: "defer",
-                    filename: "..\\" + value.windowName, //TODO check if this works
+                    filename: "..\\out\\" + value.windowName + ".html",
                     htmlTemplate: `
                         <!DOCTYPE html>
                         <html lang="en">
@@ -103,6 +103,7 @@ const results = await build({
         })
     ]
 })
+
 if (results.errors.length > 0) {
     results.errors.forEach((v, i) => {
         console.log("error " + i + " from " + v.pluginName)
@@ -115,4 +116,7 @@ else{
     toJson(manifest, OUTDIR + "manifest.json")
     pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk")) //TODO get error
 //TODO check if the public has to be transfered too
+}
+if (DEBUG) {
+    toJson(results.metafile, "meta.json")
 }

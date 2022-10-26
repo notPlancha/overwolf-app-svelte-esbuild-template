@@ -3,7 +3,6 @@ import sveltePlugin from "esbuild-svelte"
 import sveltePreprocess from "svelte-preprocess";
 import * as fs from "fs";
 import {manifest} from "./Manifest.mjs";
-import {type HtmlFileConfiguration, htmlPlugin as exportHtmlPlugin} from "@craftamap/esbuild-plugin-html";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'
 import {zip} from "zip-a-folder";
 
@@ -47,7 +46,7 @@ let entryPoints = new Array<{ windowName: string, entryFile: string }>(0);
 for (const [windowName, windowData] of Object.entries(pages)) {
     if (windowData.file.endsWith(".svelte")){
         let subs = {"APPNAME" :ENTRY + windowData.file, "APP":windowName}
-        let indexFile = "temp/index." + windowData.file + ".ts"
+        let indexFile = "temp/" + windowData.file + ".ts"
         await replaceToFile("index.svelte.ts", indexFile, subs)
         entryPoints.push({windowName: windowName, entryFile: indexFile}) //TODO check if this is right
         windowData.file = fileToHtml(windowData.file);
@@ -58,9 +57,6 @@ for (const [windowName, windowData] of Object.entries(pages)) {
         windowData.file = fileToHtml(windowData.file);
     }
 }
-const notHtmlEntryPoints = entryPoints.filter(value => {
-    return !value.entryFile.endsWith(".html");
-})
 
 const results = await build({
     define: {"DEBUG": DEBUG? "true" : "false"},
@@ -79,28 +75,6 @@ const results = await build({
         sveltePlugin({
             preprocess: sveltePreprocess()
         }),
-        exportHtmlPlugin({
-            files:notHtmlEntryPoints.map((value):HtmlFileConfiguration => {
-                return {
-                    entryPoints: [value.entryFile],
-                    title: manifest.meta.name + ":" + value.windowName,
-                    define: {"DEBUG": DEBUG? "true" : "false"},
-                    scriptLoading: "defer",
-                    filename: "..\\out\\" + value.windowName + ".html",
-                    htmlTemplate: `
-                        <!DOCTYPE html>
-                        <html lang="en">
-                            <head>
-                                <meta charset="UTF-8">
-                            </head>
-                            <body>
-                                <div id="app"></div>
-                            </body>
-                        </html>
-                    `
-                }
-            })
-        })
     ]
 })
 
@@ -109,14 +83,32 @@ if (results.errors.length > 0) {
         console.log("error " + i + " from " + v.pluginName)
         console.log(v.text)
     })
-}
-
-else{
-//it's better to do this after because we don't want to export and zip multiple times in the loops
+} else{
+    for (const [path, outputInfo] of Object.entries(results.metafile.outputs)) {
+        if (outputInfo.entryPoint && !outputInfo.entryPoint.endsWith(".html")) {
+            // create html and insert js into it
+            const htmlToInsert = `
+                        <!DOCTYPE html>
+                        <html lang="en">
+                            <head>
+                                <meta charset="UTF-8">
+                                <script src="${path.replace(OUTDIR, '')}"></script>
+                            </head>
+                            <body>
+                                <div id="app"></div>
+                            </body>
+                        </html>
+                    `.replace(/\s+/g, ' ').trim()
+            //create file and insert into OUTDIR
+            const htmlFile = fileToHtml(outputInfo.entryPoint.split("/").pop())
+            fs.writeFileSync(OUTDIR + htmlFile, htmlToInsert, {flag: "w"})
+        }
+    }
     toJson(manifest, OUTDIR + "manifest.json")
     pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk")) //TODO get error
 //TODO check if the public has to be transfered too
 }
+
 if (DEBUG) {
     toJson(results.metafile, "meta.json")
 }

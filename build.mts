@@ -5,13 +5,15 @@ import * as fs from "fs";
 import {manifest} from "./Manifest.mjs";
 import { html as fromHtmlPlugin }  from '@esbuilder/html'
 import {zip} from "zip-a-folder";
+import fse from "fs-extra";
 
 const
     DEBUG : boolean = true,
     MINIFY : boolean = false, //TODO chancge this
     OUTDIR : string = "out/",
     ENTRY : string = "src/",
-    PACKDIR : string = "dist/"
+    PACKDIR : string = "dist/",
+    PUBLICDIR : string = "public/";
 function toJson(obj: object, path: string){
     let str = JSON.stringify(obj);
     fs.writeFileSync(path, str)
@@ -23,9 +25,7 @@ function pack(folderPath: string, resultPath: string){
     })
 }
 function fileToHtml(fileName: string){
-    const fileNames = fileName.split(".")
-    fileNames.pop()
-    return fileNames.join(".") + ".html"
+    return fileName + ".html"
 }
 
 function replaceAll(str: string, find: string, replaceStr: string) {
@@ -104,9 +104,9 @@ if (results.errors.length > 0) {
             fs.writeFileSync(OUTDIR + htmlFile, htmlToInsert, {flag: "w"})
         }
     }
-    toJson(manifest, OUTDIR + "manifest.json")
+    toJson(manifest, OUTDIR + "manifest.json");
+    fse.copySync(PUBLICDIR, OUTDIR);
     pack(OUTDIR, PACKDIR.concat(manifest.meta.name, "-", manifest.meta.version, ".opk")) //TODO get error
-//TODO check if the public has to be transfered too
 }
 
 if (DEBUG) {

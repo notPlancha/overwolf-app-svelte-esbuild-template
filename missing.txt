@@ -1,5 +1,4 @@
-Html not outing correctly
-- plugin isn't working?
 check opk
 check ingame
 check TODOs
+overwolf not verified version
